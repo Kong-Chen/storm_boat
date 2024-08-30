@@ -38,8 +38,7 @@ register_adapter(uuid.UUID, adapt_uuid)
 #發送line_notify
 def send_line_notify(message):
     url = 'https://notify-api.line.me/api/notify'
-    token = 'FyyMaWRVa0fzLT31LzqJ9kOIblJJk6oxJjq9wN8H7Cn'   #世壯
-    # 'JFNVWXhtYadtX65B3U9g4s5vzgVTeUdLVZqykcE4TUs' #列車
+    token = '3oCfWQ3j590TpqISA2liHpeuoFFMcwWzd02i5txDLMO'   #風暴
     headers = {
         'Authorization': 'Bearer ' + token
     }
