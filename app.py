@@ -73,7 +73,7 @@ def callback():
             cursor = connection.cursor()
             query = """
             SELECT u.user_name
-            FROM leave_records l
+            FROM leave_records_storm l
             LEFT JOIN users_storm u ON l.user_id = u.user_id
             WHERE l.leave_date = %s;
             """
