@@ -61,8 +61,16 @@ def callback():
         hour = current_time.hour
         minute = current_time.minute
         
-        # if current_time.weekday() <= 4 and hour == 8 and minute == 0 :
-        if minute <= 60  :            
+        if current_time.weekday() <= 4 and hour == 8 and minute == 0 :
+            
+            days_until_saturday = (5 - current_time.weekday() + 7) % 7
+            if days_until_saturday == 0:
+                days_until_saturday = 7  # 如果今天是周六，找到下一个周六
+
+            next_saturday = current_time + timedelta(days=days_until_saturday)
+            next_saturday_str = f"{next_saturday.year}-{next_saturday.month:02d}-{next_saturday.day:02d}"
+            
+            
             connection = psycopg2.connect(
                 host="dpg-cpp4jouehbks73brha50-a.oregon-postgres.render.com",
                 port="5432",
@@ -77,56 +85,56 @@ def callback():
             LEFT JOIN users_storm u ON l.user_id = u.user_id
             WHERE l.leave_date = %s;
             """
-            cursor.execute(query, (current_time,))
+            cursor.execute(query, (next_saturday_str,))
             records = cursor.fetchall()
             if records:
-                response_message = f'{current_time}請假的有：'
+                response_message = f'{next_saturday_str}請假的有：'
                 for record in records:
                     user_name = record[0]
                     response_message += f"\n{user_name}"
 
             else:
-                response_message = f"今天全數到齊！！"
+                response_message = f"{next_saturday_str}沒有人請假！！"
             
             #增加天氣判斷
-            # if 2 <= current_time.weekday() <= 4:
-            authorization = 'CWA-5AB2578A-4D37-4042-9FBB-777EAAED3040'
-            url = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-061"
+            if 2 <= current_time.weekday() <= 4:
+                authorization = 'CWA-5AB2578A-4D37-4042-9FBB-777EAAED3040'
+                url = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-061"
 
-            # 发出请求
-            response = requests.get(url, {"Authorization": authorization})
-            response.raise_for_status()  # 检查响应状态码是否为200
-            resJson = response.json()
-            locations = resJson["records"]["locations"][0]["location"]
-            target_district = "新店區"
-            target_date = current_time
-            target_time = target_date +" 09:00:00"
-            pop_time = target_date +" 06:00:00" 
-            for location in locations:
-                if location["locationName"] == target_district:
-                    # print(location["locationName"])
-                    weatherElements = location["weatherElement"]
-                    for weatherElement in weatherElements:
-                        if weatherElement["elementName"] == "T":
-                            timeDicts = weatherElement["time"]
-                            for timeDict in timeDicts:
-                                if timeDict["dataTime"] == target_time:
-                                    # print (target_date+":")
-                                    response_message += f"\n"+"碧潭晨練氣象預測如下:"
-                                    aaa = "溫度攝氏:"+timeDict["elementValue"][0]["value"]+"度"
-                                    response_message += f"\n{aaa}"
-                        elif weatherElement["elementName"] == "PoP6h":
-                            popDicts = weatherElement["time"]
-                            for popDict in popDicts:
-                                if popDict["startTime"] == pop_time:
-                                    bbb= "降雨機率:"+popDict["elementValue"][0]["value"]+"%"
-                                    response_message += f"\n{bbb}"
-                        elif weatherElement["elementName"] == "WS":
-                            windDicts = weatherElement["time"]
-                            for windDict in windDicts:
-                                if windDict["dataTime"] == target_time:
-                                    ccc="最大風速:"+windDict["elementValue"][0]["value"]+"公尺/秒"
-                                    response_message += f"\n{ccc}"
+                # 发出请求
+                response = requests.get(url, {"Authorization": authorization})
+                response.raise_for_status()  # 检查响应状态码是否为200
+                resJson = response.json()
+                locations = resJson["records"]["locations"][0]["location"]
+                target_district = "士林區"
+                target_date = next_saturday_str
+                target_time = target_date +" 09:00:00"
+                pop_time = target_date +" 06:00:00" 
+                for location in locations:
+                    if location["locationName"] == target_district:
+                        # print(location["locationName"])
+                        weatherElements = location["weatherElement"]
+                        for weatherElement in weatherElements:
+                            if weatherElement["elementName"] == "T":
+                                timeDicts = weatherElement["time"]
+                                for timeDict in timeDicts:
+                                    if timeDict["dataTime"] == target_time:
+                                        # print (target_date+":")
+                                        response_message += f"\n"+"社子島當天早上氣象預測如下:"
+                                        aaa = "溫度攝氏:"+timeDict["elementValue"][0]["value"]+"度"
+                                        response_message += f"\n{aaa}"
+                            elif weatherElement["elementName"] == "PoP6h":
+                                popDicts = weatherElement["time"]
+                                for popDict in popDicts:
+                                    if popDict["startTime"] == pop_time:
+                                        bbb= "降雨機率:"+popDict["elementValue"][0]["value"]+"%"
+                                        response_message += f"\n{bbb}"
+                            elif weatherElement["elementName"] == "WS":
+                                windDicts = weatherElement["time"]
+                                for windDict in windDicts:
+                                    if windDict["dataTime"] == target_time:
+                                        ccc="最大風速:"+windDict["elementValue"][0]["value"]+"公尺/秒"
+                                        response_message += f"\n{ccc}"
             
             response = send_line_notify(response_message)
         
@@ -183,15 +191,15 @@ def handle_message(event):
         
         # 對話關鍵字判斷開始 *****************
         if user_message =='功能':
-            aaa = (f"1.請假：0520我要請假"+'\n' + f"2.取消請假：0520取消請假"+'\n' + f"3.查詢請假：0520查詢請假" +'\n' + f"4.我的請假查詢")
+            aaa = (f"1.請假：0520請假"+'\n' + f"2.取消請假：0520取消請假"+'\n' + f"3.查詢請假：0520查詢請假" +'\n' + f"4.我的請假查詢")
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(text=aaa)
             )
             
-        elif re.match(r'\d{4}我要請假', user_message):
+        elif re.match(r'\d{4}請假', user_message):
             # 使用正規表達式匹配日期格式
-            pattern = r'(\d{2})(\d{2})我要請假'
+            pattern = r'(\d{2})(\d{2})請假'
             match = re.match(pattern, user_message)
 
             if match:
@@ -201,42 +209,42 @@ def handle_message(event):
                 date_str = f"{year}-{month}-{day}"
 
                 try:
-                    # if get_weekday_in_taiwan(date_str) > 5 : #如果是假日
+                    if get_weekday_in_taiwan(date_str) > 5 : #如果是假日
                         
-                    query_check = """
-                    SELECT COUNT(*) FROM leave_records_storm
-                    WHERE user_id = %s AND leave_date = %s;
-                    """
-                    cursor.execute(query_check, (user_line_id, date_str))
-                    count = cursor.fetchone()[0]
-                    
-                    if count == 0:
-                        # 插入请假记录到 leave_records 资料表
-                        query_leave = """
-                        INSERT INTO leave_records_storm (user_id, leave_date)
-                        VALUES (%s, %s);
+                        query_check = """
+                        SELECT COUNT(*) FROM leave_records_storm
+                        WHERE user_id = %s AND leave_date = %s;
                         """
-                        cursor.execute(query_leave, (user_line_id, date_str))
-                        connection.commit()
+                        cursor.execute(query_check, (user_line_id, date_str))
+                        count = cursor.fetchone()[0]
+                        
+                        if count == 0:
+                            # 插入请假记录到 leave_records 资料表
+                            query_leave = """
+                            INSERT INTO leave_records_storm (user_id, leave_date)
+                            VALUES (%s, %s);
+                            """
+                            cursor.execute(query_leave, (user_line_id, date_str))
+                            connection.commit()
 
-                        response_message = f'完成請假日期登記：{date_str}'
-                        line_bot_api.reply_message(
-                            event.reply_token,
-                            TextSendMessage(text=response_message)
-                        )
+                            response_message = f'完成請假日期登記：{date_str}'
+                            line_bot_api.reply_message(
+                                event.reply_token,
+                                TextSendMessage(text=response_message)
+                            )
+                        else:
+                            response_message = f"您在此日期已請假!!"
+                            line_bot_api.reply_message(
+                                event.reply_token,
+                                TextSendMessage(text=response_message)
+                            )
+
                     else:
-                        response_message = f"您在此日期已請假!!"
+                        response_message = f"請假日期非練習時間!!!!"
                         line_bot_api.reply_message(
                             event.reply_token,
                             TextSendMessage(text=response_message)
                         )
-
-                    #else:
-                    #    response_message = f"請假日期非練習時間!!!!"
-                    #    line_bot_api.reply_message(
-                    #        event.reply_token,
-                    #        TextSendMessage(text=response_message)
-                    #    )
                         
                 except ValueError:
                     warning_message = '日期格式不正確。'
@@ -263,41 +271,41 @@ def handle_message(event):
                 date_str = f"{year}-{month}-{day}"
 
                 try:
-                    #if get_weekday_in_taiwan(date_str) > 5 : #如果是假日
+                    if get_weekday_in_taiwan(date_str) > 5 : #如果是假日
                         
-                    query_check = """
-                    SELECT COUNT(*) FROM leave_records_storm
-                    WHERE user_id = %s AND leave_date = %s;
-                    """
-                    cursor.execute(query_check, (user_line_id, date_str))
-                    count = cursor.fetchone()[0]
-                    
-                    if count == 1:
-                        # 插入请假记录到 leave_records 资料表
-                        query_leave = """
-                        DELETE FROM leave_records_storm WHERE user_id =%s AND leave_date=%s;
+                        query_check = """
+                        SELECT COUNT(*) FROM leave_records_storm
+                        WHERE user_id = %s AND leave_date = %s;
                         """
-                        cursor.execute(query_leave, (user_line_id, date_str))
-                        connection.commit()
+                        cursor.execute(query_check, (user_line_id, date_str))
+                        count = cursor.fetchone()[0]
+                        
+                        if count == 1:
+                            # 插入请假记录到 leave_records 资料表
+                            query_leave = """
+                            DELETE FROM leave_records_storm WHERE user_id =%s AND leave_date=%s;
+                            """
+                            cursor.execute(query_leave, (user_line_id, date_str))
+                            connection.commit()
 
-                        response_message = f'完成請假取消：{date_str}'
-                        line_bot_api.reply_message(
-                            event.reply_token,
-                            TextSendMessage(text=response_message)
-                        )
+                            response_message = f'完成請假取消：{date_str}'
+                            line_bot_api.reply_message(
+                                event.reply_token,
+                                TextSendMessage(text=response_message)
+                            )
+                        else:
+                            response_message = f"您在此日期沒有請假紀錄!!!"
+                            line_bot_api.reply_message(
+                                event.reply_token,
+                                TextSendMessage(text=response_message)
+                            )
+
                     else:
-                        response_message = f"您在此日期沒有請假紀錄!!!"
+                        response_message = f"請假日期非假日!!!!"
                         line_bot_api.reply_message(
                             event.reply_token,
                             TextSendMessage(text=response_message)
                         )
-
-                    #else:
-                    #    response_message = f"請假日期非假日!!!!"
-                    #    line_bot_api.reply_message(
-                    #        event.reply_token,
-                    #        TextSendMessage(text=response_message)
-                    #    )
                         
                 except ValueError:
                     warning_message = '日期格式不正確。'
