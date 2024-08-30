@@ -82,11 +82,23 @@ def callback():
             """
             cursor.execute(query, (current_time_str,))
             records = cursor.fetchall()
+            
+            query_1 = """
+            SELECT COUNT(*)
+            FROM leave_records_storm l
+            LEFT JOIN users_storm u ON l.user_id = u.user_id
+            WHERE l.leave_date = %s;
+            """
+            cursor.execute(query_1, (current_time_str,))
+            count = cursor.fetchone()[0]
+            
             if records:
                 response_message = f'{current_time_str}請假的有：'
                 for record in records:
                     user_name = record[0]
                     response_message += f"\n{user_name}"
+                
+                response_message += f"\n共計{count}人請假!"
 
             else:
                 response_message = f"\n今天全數到齊！！"
