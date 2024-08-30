@@ -61,7 +61,6 @@ def callback():
         hour = current_time.hour
         minute = current_time.minute
         
-
         current_time_str = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}"
         
         if hour == 5 and minute == 0 :
