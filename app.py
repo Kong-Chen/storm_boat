@@ -89,7 +89,7 @@ def callback():
                     response_message += f"\n{user_name}"
 
             else:
-                response_message = f"今天全數到齊！！"
+                response_message = f"\n今天全數到齊！！"
             
             #增加天氣判斷
             # if 2 <= current_time.weekday() <= 4:
