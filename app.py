@@ -99,7 +99,7 @@ def callback():
             resJson = response.json()
             locations = resJson["records"]["locations"][0]["location"]
             target_district = "新店區"
-            target_date = current_time
+            target_date = str(current_time)
             target_time = target_date +" 09:00:00"
             pop_time = target_date +" 06:00:00" 
             for location in locations:
