@@ -61,6 +61,9 @@ def callback():
         hour = current_time.hour
         minute = current_time.minute
         
+
+        current_time_str = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}"
+        
         # if current_time.weekday() <= 4 and hour == 8 and minute == 0 :
         if minute <= 60  :            
             connection = psycopg2.connect(
@@ -77,10 +80,10 @@ def callback():
             LEFT JOIN users_storm u ON l.user_id = u.user_id
             WHERE l.leave_date = %s;
             """
-            cursor.execute(query, (current_time,))
+            cursor.execute(query, (current_time_str,))
             records = cursor.fetchall()
             if records:
-                response_message = f'{current_time}請假的有：'
+                response_message = f'{current_time_str}請假的有：'
                 for record in records:
                     user_name = record[0]
                     response_message += f"\n{user_name}"
@@ -99,7 +102,7 @@ def callback():
             resJson = response.json()
             locations = resJson["records"]["locations"][0]["location"]
             target_district = "新店區"
-            target_date = current_time.strftime("%Y-%m-%d")
+            target_date = current_time_str
             target_time = target_date +" 09:00:00"
             pop_time = target_date +" 06:00:00" 
             for location in locations:
