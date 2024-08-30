@@ -64,8 +64,8 @@ def callback():
 
         current_time_str = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}"
         
-        # if current_time.weekday() <= 4 and hour == 8 and minute == 0 :
-        if minute <= 60  :            
+        if hour == 5 and minute == 0 :
+        #if minute <= 60  :            
             connection = psycopg2.connect(
                 host="dpg-cpp4jouehbks73brha50-a.oregon-postgres.render.com",
                 port="5432",
