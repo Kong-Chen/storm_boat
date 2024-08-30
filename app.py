@@ -83,7 +83,7 @@ def callback():
             query = """
             SELECT u.user_name
             FROM leave_records l
-            LEFT JOIN users u ON l.user_id = u.user_id
+            LEFT JOIN users_storm u ON l.user_id = u.user_id
             WHERE l.leave_date = %s;
             """
             cursor.execute(query, (next_saturday_str,))
@@ -183,7 +183,7 @@ def handle_message(event):
         # 新增使用者
         cursor = connection.cursor()
         query = """
-        INSERT INTO users (user_id, user_name)
+        INSERT INTO users_storm (user_id, user_name)
         VALUES (%s, %s)
         ON CONFLICT (user_id) DO NOTHING;
         """
@@ -213,7 +213,7 @@ def handle_message(event):
                     if get_weekday_in_taiwan(date_str) > 5 : #如果是假日
                         
                         query_check = """
-                        SELECT COUNT(*) FROM leave_records
+                        SELECT COUNT(*) FROM leave_records_storm
                         WHERE user_id = %s AND leave_date = %s;
                         """
                         cursor.execute(query_check, (user_line_id, date_str))
@@ -222,7 +222,7 @@ def handle_message(event):
                         if count == 0:
                             # 插入请假记录到 leave_records 资料表
                             query_leave = """
-                            INSERT INTO leave_records (user_id, leave_date)
+                            INSERT INTO leave_records_storm (user_id, leave_date)
                             VALUES (%s, %s);
                             """
                             cursor.execute(query_leave, (user_line_id, date_str))
@@ -275,7 +275,7 @@ def handle_message(event):
                     if get_weekday_in_taiwan(date_str) > 5 : #如果是假日
                         
                         query_check = """
-                        SELECT COUNT(*) FROM leave_records
+                        SELECT COUNT(*) FROM leave_records_storm
                         WHERE user_id = %s AND leave_date = %s;
                         """
                         cursor.execute(query_check, (user_line_id, date_str))
@@ -284,7 +284,7 @@ def handle_message(event):
                         if count == 1:
                             # 插入请假记录到 leave_records 资料表
                             query_leave = """
-                            DELETE FROM leave_records WHERE user_id =%s AND leave_date=%s;
+                            DELETE FROM leave_records_storm WHERE user_id =%s AND leave_date=%s;
                             """
                             cursor.execute(query_leave, (user_line_id, date_str))
                             connection.commit()
@@ -339,8 +339,8 @@ def handle_message(event):
                     # 查詢 leave_records 表格，找出符合該日期的所有 user_id
                     query = """
                     SELECT u.user_name
-                    FROM leave_records l
-                    LEFT JOIN users u ON l.user_id = u.user_id
+                    FROM leave_records_storm l
+                    LEFT JOIN users_storm u ON l.user_id = u.user_id
                     WHERE l.leave_date = %s;
                     """
                     cursor.execute(query, (date_str,))
@@ -381,7 +381,7 @@ def handle_message(event):
             # 查詢 leave_records 表格，找出該用戶的所有請假日期
             query = """
             SELECT leave_date
-            FROM leave_records
+            FROM leave_records_storm
             WHERE user_id = %s
             ORDER BY leave_date;
             """
